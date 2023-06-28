@@ -15,14 +15,20 @@ public class UserRestController {
     private final UserJPARepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
+    // 회원가입
     @PostMapping("/join")
     public ResponseEntity<?> join(@RequestBody UserRequest.JoinDTO joinDTO) {
-        User user = joinDTO.toEntity();
+        User user = User.builder()
+                .email(joinDTO.getEmail())
+                .password(passwordEncoder.encode(joinDTO.getPassword()))
+                .username(joinDTO.getUsername())
+                .roles(Collections.singletonList("ROLE_USER"))
+                .build();
 
         try {
             userRepository.save(user);
         } catch (Exception e) {
-            return ResponseEntity.ok("fail");
+            return ResponseEntity.internalServerError().body("fail");
         }
 
         return ResponseEntity.ok("ok");

@@ -1,7 +1,6 @@
 package com.example.kakaoshop.user;
 
 import lombok.*;
-import java.util.Collections;
 
 public class UserRequest {
 
@@ -13,13 +12,5 @@ public class UserRequest {
         private String password;
         private String username;
 
-        public User toEntity() {
-            return User.builder()
-                    .email(email)
-                    .password(password)
-                    .username(username)
-                    .roles(Collections.singletonList("ROLE_USER"))
-                    .build();
-        }
     }
 }
