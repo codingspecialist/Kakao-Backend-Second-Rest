@@ -25,11 +25,7 @@ spring:
       hibernate:
         format_sql: true
       default_batch_fetch_size: 100
-    open-in-view: false
-  security:
-    user:
-      name: ssar
-      password: 1234
+    open-in-view: true
 
 logging:
   level:

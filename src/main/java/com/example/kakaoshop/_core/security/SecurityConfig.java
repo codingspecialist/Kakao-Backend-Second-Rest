@@ -22,72 +22,51 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @Configuration
 public class SecurityConfig {
 
-
     @Bean
     public PasswordEncoder passwordEncoder() {
         return PasswordEncoderFactories.createDelegatingPasswordEncoder();
     }
-
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
 
-
-    public class CustomSecurityFilterManager extends AbstractHttpConfigurer<CustomSecurityFilterManager, HttpSecurity> {
-        @Override
-        public void configure(HttpSecurity builder) throws Exception {
-            AuthenticationManager authenticationManager = builder.getSharedObject(AuthenticationManager.class);
-            super.configure(builder);
-        }
-    }
-
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         // 1. CSRF 해제
         http.csrf().disable(); // postman 접근해야 함!! - CSR 할때!!
 
-
         // 2. iframe 거부
         http.headers().frameOptions().sameOrigin();
 
-
-        // 3. cors 재설정
+        // 3. cors 설정
         http.cors().configurationSource(configurationSource());
 
+        // 4. formLogin 해제
+        http.formLogin().disable();
 
-        // 5. form 로긴 해제 (UsernamePasswordAuthenticationFilter 비활성화)
-        http.formLogin().loginPage("/loginForm").loginProcessingUrl("/login");
-
-
-        // 6. 로그인 인증창이 뜨지 않게 비활성화
+        // 5. 로그인 인증창이 뜨지 않게 비활성화
         http.httpBasic().disable();
 
-
-        // 7. 커스텀 필터 적용 (시큐리티 필터 교환)
-        http.apply(new CustomSecurityFilterManager());
-
-
-        // 8. 인증 실패 처리
+        // 6. 인증 실패 처리
         http.exceptionHandling().authenticationEntryPoint((request, response, authException) -> {
             log.warn("인증되지 않은 사용자가 자원에 접근하려 합니다 : "+authException.getMessage());
         });
 
 
-        // 9. 권한 실패 처리
+        // 7. 권한 실패 처리
         http.exceptionHandling().accessDeniedHandler((request, response, accessDeniedException) -> {
             log.warn("권한이 없는 사용자가 자원에 접근하려 합니다 : "+accessDeniedException.getMessage());
         });
 
-
-        // 11. 인증, 권한 필터 설정
+        // 8. 인증, 권한 필터 설정
         http.authorizeRequests(
-                authorize -> authorize.antMatchers("/").authenticated()
+                authorize -> authorize.antMatchers("/carts/**", "/options/**", "/orders/**").authenticated()
+                        .antMatchers("/admin/**")
+                        .access("hasRole('ADMIN')")
                         .anyRequest().permitAll()
         );
-
 
         return http.build();
     }
